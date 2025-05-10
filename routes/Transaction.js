@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Transaction = require('../models/Transaction');
-const Customer = require('../models/Customer');
+const Customer = require('../models/customer');
 
 // Add a transaction for a specific customer
 // Add a transaction for a specific customer
