@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const Customer = require('../models/Customer');
+const Customer = require('../models/customer');
 const Transaction = require('../models/Transaction'); // Required to delete related transactions
 const authMiddleware = require('../middleware/authMiddleware');
 
