@@ -1,5 +1,3 @@
-// ==== server/index.js ====
-
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
@@ -36,9 +34,10 @@ mongoose
   })
   .then(() => {
     console.log('✅ MongoDB connected');
-    app.listen(4000, () =>
-      console.log('🚀 Server running on http://localhost:4000')
-    );
+    
+    // Use PORT environment variable or default to 4000
+    const port = process.env.PORT || 4000;
+    app.listen(port, () => console.log(`🚀 Server running on http://localhost:${port}`));
   })
   .catch((err) => {
     console.error('❌ MongoDB connection error:', err);
