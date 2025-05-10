@@ -1,0 +1,30 @@
+{
+  "name": "my-express-app",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "bcryptjs": "^3.0.2",
+    "cloudinary": "^2.6.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "json2csv": "^6.0.0-alpha.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.14.2",
+    "path-to-regexp": "^6.2.1"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "os-browserify": "^0.3.0",
+    "react-app-rewired": "^2.2.1",
+    "stream-browserify": "^3.0.0"
+  }
+}
