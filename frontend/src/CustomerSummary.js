@@ -25,7 +25,7 @@ const CustomerDetails = () => {
     if (!token) return;
 
     try {
-      const response = await axios.get(`http://localhost:4000/api/customers/${id}`, {
+      const response = await axios.get(`https://cashtrack-6.onrender.com/api/customers/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setCustomer(response.data);
@@ -42,7 +42,7 @@ const CustomerDetails = () => {
 
     try {
       await axios.post(
-        `http://localhost:4000/api/transactions/${id}`,
+        `https://cashtrack-6.onrender.com/api/transactions/${id}`,
         { type, amount: Number(amount), description },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -60,7 +60,7 @@ const CustomerDetails = () => {
 
     try {
       await axios.delete(
-        `http://localhost:4000/api/transactions/${id}/${transactionId}`,
+        `https://cashtrack-6.onrender.com/api/transactions/${id}/${transactionId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       fetchCustomer();

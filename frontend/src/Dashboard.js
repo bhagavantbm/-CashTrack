@@ -26,7 +26,7 @@ const Dashboard = () => {
 
   const fetchCustomers = async () => {
     try {
-      const res = await axios.get('http://localhost:4000/api/customers', getAuthHeader());
+      const res = await axios.get('https://cashtrack-6.onrender.com/api/customers', getAuthHeader());
       setCustomers(res.data);
     } catch (err) {
       console.error('Error fetching customers:', err.response?.data || err.message);
@@ -51,7 +51,7 @@ const Dashboard = () => {
   const handleDeleteCustomer = async (id) => {
     if (window.confirm("Are you sure you want to delete this customer?")) {
       try {
-        await axios.delete(`http://localhost:4000/api/customers/${id}`, getAuthHeader());
+        await axios.delete(`https://cashtrack-6.onrender.com/api/customers/${id}`, getAuthHeader());
         alert('Customer deleted!');
         fetchCustomers();
       } catch (err) {
