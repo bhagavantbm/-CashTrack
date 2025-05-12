@@ -19,10 +19,11 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const response = await axios.post(
-        'http://localhost:4000/api/users/login',
-        formData
-      );
+     const response = await axios.post(
+  `${process.env.REACT_APP_API_URL}/api/users/login`, // Use live backend URL here
+  formData
+);
+
 
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('email', response.data.userEmail);

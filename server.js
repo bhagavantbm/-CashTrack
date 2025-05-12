@@ -12,7 +12,9 @@ const port = 4000;
 require('dotenv').config();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:3000', 'https://cash-track-nhlp.vercel.app']
+}));
 app.use(bodyParser.json());
 
 // MongoDB connection
