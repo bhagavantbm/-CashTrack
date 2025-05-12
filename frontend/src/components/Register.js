@@ -15,7 +15,7 @@ const Register = () => {
     setLoading(true); // Show loading state
 
     try {
-      const res = await axios.post('http://localhost:4000/api/users/register', {
+      const res =await axios.post(`${process.env.REACT_APP_API_URL}/api/users/register`, {
         name,
         email,
         password,
