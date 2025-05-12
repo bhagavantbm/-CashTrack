@@ -17,7 +17,9 @@ const app = express();
 
 app.use('/api/users', profileRoutes);
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:3000', 'https://cash-track-nhlp.vercel.app']
+}));
 app.use(express.json());
 
 // Cloudinary config

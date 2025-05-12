@@ -7,6 +7,7 @@ console.log('Current directory:', __dirname);  // Log the current directory
 const userModelPath = path.join(__dirname, '../models/User.js');
 console.log('User model path:', userModelPath);  // Log the resolved path
 
+
 const User = require(userModelPath);
 
 const authenticate = require('../middleware/authMiddleware');
