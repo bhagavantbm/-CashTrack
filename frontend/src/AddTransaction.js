@@ -28,7 +28,7 @@ const CustomerTransaction = () => {
 
     try {
       await axios.post(
-        `http://localhost:4000/api/transactions/${id}`,
+        `https://cashtrack-6.onrender.com/api/transactions/${id}`,
         {
           type,
           amount,

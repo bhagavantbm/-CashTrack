@@ -31,7 +31,7 @@ const AddCustomer = () => {
 
     try {
       const response = await axios.post(
-        'http://localhost:4000/api/customers',
+        'https://cashtrack-6.onrender.com/api/customers',
         { name, phone },
         {
           headers: {
