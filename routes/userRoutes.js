@@ -1,11 +1,9 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const User = require('../models/user');
+const User = require('../models/user'); // Make sure this path is correct
 const authenticate = require('../middleware/authMiddleware');
 const router = express.Router();
-
-
 
 // REGISTER Route
 router.post('/register', async (req, res) => {
@@ -34,6 +32,8 @@ router.post('/register', async (req, res) => {
     res.status(500).json({ message: 'Server error during registration' });
   }
 });
+
+// LOGIN Route
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
@@ -45,8 +45,8 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
 
-    // Check if the password is correct (Assuming you have a comparePassword method)
-    const isPasswordValid = await user.comparePassword(password);
+    // Check if the password is correct using bcrypt.compare
+    const isPasswordValid = await bcrypt.compare(password, user.password); // Corrected comparison
 
     if (!isPasswordValid) {
       return res.status(400).json({ message: 'Invalid email or password' });
@@ -55,20 +55,19 @@ router.post('/login', async (req, res) => {
     // Create a JWT token
     const token = jwt.sign(
       { id: user._id, email: user.email },
-      'your_jwt_secret', // Replace with your actual secret
+      process.env.JWT_SECRET, // Use your actual JWT secret
       { expiresIn: '1h' }
     );
 
     // Send the response with the token and email
     return res.json({ token, userEmail: user.email });
-
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: 'Server error' });
   }
 });
 
-// Update user's profile picture
+// Update user's profile picture (Optional if you have such functionality)
 
 
 module.exports = router;
