@@ -1,13 +1,13 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const User = require('../models/user'); // Make sure this path is correct
+ // Make sure this path is correct
 const path = require('path');
 console.log('Current directory:', __dirname);  // Log the current directory
-const userModelPath = path.join(__dirname, '../models/user');
+const userModelPath = path.join(__dirname, '../models/User.js');
 console.log('User model path:', userModelPath);  // Log the resolved path
 
-// const User = require(userModelPath);
+const User = require(userModelPath);
 
 const authenticate = require('../middleware/authMiddleware');
 const router = express.Router();
