@@ -16,7 +16,7 @@ const Register = () => {
     setLoading(true); // Show loading state
 
     try {
-      const res =await axios.post(`${process.env.REACT_APP_API_URL}/api/users/register`, {
+      const res =await axios.post('https://cashtrack-6.onrender.com/api/users/register', {
         name,
         email,
         password,
