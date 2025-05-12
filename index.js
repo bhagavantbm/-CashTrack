@@ -9,9 +9,13 @@ const cloudinary = require('cloudinary').v2;
 const userRoutes = require('./routes/userRoutes');
 const customerRoutes = require('./routes/Customers');
 const transactionRoutes = require('./routes/Transaction');
+const profileRoutes = require('./routes/profileRoutes'); 
+
 
 const app = express();
 
+
+app.use('/api/users', profileRoutes);
 // Middleware
 app.use(cors());
 app.use(express.json());
