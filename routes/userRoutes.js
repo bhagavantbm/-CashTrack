@@ -1,13 +1,10 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-// const User = require('../models/user'); // Make sure this path is correct
+const User = require('../models/user'); // Make sure this path is correct
 const authenticate = require('../middleware/authMiddleware');
 const router = express.Router();
 
-
-const path = require('path');
-const User = require(path.join(__dirname, '../models/user')); // This should be the corrected path
 
 // REGISTER Route
 router.post('/register', async (req, res) => {
