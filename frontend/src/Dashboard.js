@@ -12,12 +12,10 @@ const Dashboard = () => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     const userEmail = localStorage.getItem('email');
-    if (!token) {
-      navigate('/login');
-    } else {
+    if (!token) navigate('/login');
+    else {
       setEmail(userEmail || 'user@example.com');
       fetchCustomers();
-      
     }
   }, []);
 
@@ -35,18 +33,6 @@ const Dashboard = () => {
     }
   };
 
- 
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('email');
-    navigate('/login');
-  };
-
-  const toggleDropdown = () => {
-    setShowDropdown(!showDropdown);
-  };
-
   const calculateCustomerTotals = (transactions = []) => {
     let credit = 0, debit = 0;
     transactions.forEach(txn => {
@@ -54,6 +40,12 @@ const Dashboard = () => {
       else if (txn.type === 'debit') debit += txn.amount;
     });
     return { credit, debit, balance: credit - debit };
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('email');
+    navigate('/login');
   };
 
   const handleDeleteCustomer = async (id) => {
@@ -86,150 +78,213 @@ const Dashboard = () => {
   );
 
   return (
-    <div className="dashboard-container">
+    <div className="dashboard">
       <style>{`
-        .dashboard-container {
+        .dashboard {
           padding: 20px;
+          background: #f0f4f8;
           font-family: 'Segoe UI', sans-serif;
-          background: #f9f9f9;
+          min-height: 100vh;
         }
+
         .dashboard-header {
           display: flex;
           justify-content: space-between;
           align-items: center;
           flex-wrap: wrap;
-          gap: 10px;
+          margin-bottom: 20px;
         }
-        .profile-wrapper {
+
+        .profile {
           position: relative;
           cursor: pointer;
         }
+
         .profile-circle {
           width: 40px;
           height: 40px;
-          background-color: #007bff;
-          border-radius: 50%;
+          background: #007bff;
           color: white;
+          border-radius: 50%;
           display: flex;
-          justify-content: center;
           align-items: center;
+          justify-content: center;
           font-weight: bold;
-          overflow: hidden;
         }
-        .profile-circle img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
-        .dropdown-menu {
+
+        .dropdown {
           position: absolute;
           top: 50px;
           right: 0;
           background: white;
-          padding: 10px;
-          border: 1px solid #ccc;
+          box-shadow: 0 4px 10px rgba(0,0,0,0.1);
           border-radius: 6px;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-          z-index: 10;
+          padding: 10px;
+          z-index: 5;
+          animation: fadeIn 0.3s ease-in-out;
         }
-        .dropdown-menu p {
-          margin: 0 0 8px 0;
-          font-weight: bold;
-        }
-        .dropdown-menu button {
-          background-color: red;
+
+        .dropdown button {
+          background: red;
           color: white;
           border: none;
           padding: 6px 12px;
           border-radius: 4px;
           cursor: pointer;
+          transition: background 0.3s ease;
         }
+
+        .dropdown button:hover {
+          background: darkred;
+        }
+
         .actions {
-          margin: 20px 0;
           display: flex;
-          flex-wrap: wrap;
           gap: 10px;
+          margin-bottom: 20px;
         }
+
         .actions button {
+          background: #28a745;
+          color: white;
+          border: none;
           padding: 10px 14px;
-          border: none;
-          background-color: #007bff;
-          color: white;
-          border-radius: 4px;
+          border-radius: 6px;
+          font-weight: bold;
           cursor: pointer;
+          transition: background 0.3s ease, transform 0.2s ease;
         }
-        .customer-table {
-          width: 100%;
-          border-collapse: collapse;
+
+        .actions button:hover {
+          background: #218838;
+          transform: scale(1.03);
+        }
+
+        .cards-container {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          gap: 20px;
+        }
+
+        .card {
           background: white;
-          box-shadow: 0 0 8px rgba(0,0,0,0.05);
-        }
-        .customer-table th, .customer-table td {
-          padding: 10px;
-          border: 1px solid #ddd;
-          text-align: left;
-        }
-        .customer-table th {
-          background-color: #007bff;
-          color: white;
-        }
-        .customer-table td button {
-          margin-right: 6px;
-          padding: 4px 8px;
-          border-radius: 4px;
-          border: none;
+          padding: 16px;
+          border-radius: 12px;
+          box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+          transition: 0.3s;
           cursor: pointer;
+          animation: cardFadeIn 0.6s ease both;
         }
-        .customer-table td button:first-child {
-          background-color: #ff4d4d;
-          color: white;
+
+        .card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 6px 20px rgba(0,0,0,0.08);
         }
-        .customer-table td button:last-child {
-          background-color: #28a745;
+
+        .card h3 {
+          margin: 0 0 8px;
+          color: #333;
+          font-size: 1.2rem;
+          font-weight: 600;
+        }
+
+        .card .amounts {
+          margin: 10px 0;
+        }
+
+        .card .amounts p {
+          margin: 4px 0;
+        }
+
+        .credit { color: green; }
+        .debit { color: red; }
+        .balance { font-weight: bold; }
+
+        .card .buttons {
+          display: flex;
+          gap: 10px;
+          margin-top: 10px;
+        }
+
+        .card .buttons button {
+          flex: 1;
+          border: none;
+          padding: 8px;
+          border-radius: 6px;
+          cursor: pointer;
+          font-weight: 600;
+          transition: background 0.3s ease, transform 0.2s ease;
+        }
+
+        .delete-btn {
+          background: #dc3545;
           color: white;
         }
 
-        @media (max-width: 768px) {
-          .customer-table thead {
-            display: none;
+        .delete-btn:hover {
+          background: #c82333;
+          transform: scale(1.05);
+        }
+
+        .share-btn {
+          background: #007bff;
+          color: white;
+        }
+
+        .share-btn:hover {
+          background: #0056b3;
+          transform: scale(1.05);
+        }
+
+        .totals-bar {
+          margin-top: 40px;
+          padding: 20px;
+          background: linear-gradient(135deg, #ffe259, #ffa751);
+          color: #333;
+          border-radius: 12px;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+          font-size: 1.1rem;
+          text-align: center;
+          line-height: 1.6;
+          font-weight: 600;
+          display: flex;
+          justify-content: space-around;
+          flex-wrap: wrap;
+          gap: 10px;
+          animation: fadeIn 0.8s ease;
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes cardFadeIn {
+          from { opacity: 0; transform: scale(0.95); }
+          to { opacity: 1; transform: scale(1); }
+        }
+
+        @media (max-width: 600px) {
+          .dashboard-header h2 {
+            font-size: 1.2rem;
           }
-          .customer-table, .customer-table tbody, .customer-table tr, .customer-table td {
-            display: block;
-            width: 100%;
-          }
-          .customer-table tr {
-            margin-bottom: 15px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            background: #fff;
-            padding: 10px;
-          }
-          .customer-table td {
-            padding: 8px 10px;
+
+          .totals-bar {
+            flex-direction: column;
+            align-items: center;
             text-align: left;
-            border: none;
-          }
-          .customer-table td[data-label="Phone"],
-          .customer-table td[data-label="Credit"],
-          .customer-table td[data-label="Debit"],
-          .customer-table td[data-label="Actions"] {
-            display: none;
           }
         }
       `}</style>
 
       <div className="dashboard-header">
-        <h2>Customer Dashboard</h2>
-        <div className="profile-wrapper" onClick={toggleDropdown}>
+        <h2>📋 Customer Dashboard</h2>
+        <div className="profile" onClick={() => setShowDropdown(!showDropdown)}>
           <div className="profile-circle">
-            {profilePic ? (
-              <img src={profilePic} alt="Profile" />
-            ) : (
-              email.charAt(0).toUpperCase()
-            )}
+            {profilePic ? <img src={profilePic} alt="profile" /> : email[0]?.toUpperCase()}
           </div>
           {showDropdown && (
-            <div className="dropdown-menu">
+            <div className="dropdown">
               <p>{email}</p>
               <button onClick={handleLogout}>Logout</button>
             </div>
@@ -238,49 +293,50 @@ const Dashboard = () => {
       </div>
 
       <div className="actions">
-        <button onClick={() => navigate('/add-customer')}>Add Customer</button>
-        <button onClick={fetchCustomers}>Refresh Data</button>
+        <button onClick={() => navigate('/add-customer')}>➕ Add Customer</button>
+        <button onClick={fetchCustomers}>🔄 Refresh</button>
       </div>
 
-      <table className="customer-table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Phone</th>
-            <th>Credit (₹)</th>
-            <th>Debit (₹)</th>
-            <th>Balance (₹)</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {customers.map((customer) => {
-            const { credit, debit, balance } = calculateCustomerTotals(customer.transactions);
-            return (
-              <tr key={customer._id}>
-                <td data-label="Name" onClick={() => navigate(`/customer/${customer._id}`)} style={{ cursor: 'pointer' }}>{customer.name}</td>
-                <td data-label="Phone">{customer.phone}</td>
-                <td data-label="Credit">₹{credit}</td>
-                <td data-label="Debit">₹{debit}</td>
-                <td data-label="Balance">₹{balance}</td>
-                <td data-label="Actions">
-                  <button onClick={() => handleDeleteCustomer(customer._id)}>Delete</button>
-                  <button onClick={() => handleShare(customer, credit, debit, balance)}>Share</button>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-        <tfoot>
-          <tr>
-            <th colSpan="2">Total</th>
-            <th>₹{grandTotals.credit}</th>
-            <th>₹{grandTotals.debit}</th>
-            <th>₹{grandTotals.balance}</th>
-            <th></th>
-          </tr>
-        </tfoot>
-      </table>
+      <div className="cards-container">
+        {customers.map(customer => {
+          const { credit, debit, balance } = calculateCustomerTotals(customer.transactions);
+          return (
+            <div
+              className="card"
+              key={customer._id}
+              onClick={() => navigate(`/customer/${customer._id}`)}
+            >
+              <h3>{customer.name}</h3>
+              <p style={{ color: '#777' }}>📞 {customer.phone}</p>
+              <div className="amounts">
+                <p className="credit">Credit: ₹{credit}</p>
+                <p className="debit">Debit: ₹{debit}</p>
+                <p className="balance">Balance: ₹{balance}</p>
+              </div>
+              <div className="buttons">
+                <button
+                  className="delete-btn"
+                  onClick={(e) => { e.stopPropagation(); handleDeleteCustomer(customer._id); }}
+                >
+                  Delete
+                </button>
+                <button
+                  className="share-btn"
+                  onClick={(e) => { e.stopPropagation(); handleShare(customer, credit, debit, balance); }}
+                >
+                  Share
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="totals-bar">
+        <span>🟢 Credit: ₹{grandTotals.credit}</span>
+        <span>🔴 Debit: ₹{grandTotals.debit}</span>
+        <span>⚖️ Balance: ₹{grandTotals.balance}</span>
+      </div>
     </div>
   );
 };

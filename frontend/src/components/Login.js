@@ -4,38 +4,49 @@ import { useNavigate, Link } from 'react-router-dom';
 
 const Login = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  });
+  const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-
+    setLoading(true);
     try {
-      const res = await axios.post('http://localhost:4000/api/users/login', formData);
-      const { token, user } = res.data;
+      const response = await axios.post(
+        'http://localhost:4000/api/users/login',
+        formData
+      );
 
-      localStorage.setItem('token', token);
-      localStorage.setItem('email', user.email);
-
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('email', response.data.userEmail);
       navigate('/dashboard');
-    } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
+    } catch (error) {
+      setLoading(false);
+      setError(error.response?.data?.message || 'Login failed');
     }
   };
 
   return (
     <div style={styles.container}>
+      <div style={styles.animatedBackground}>
+        {[...Array(15)].map((_, i) => (
+          <div
+            key={i}
+            style={{
+              ...styles.circle,
+              ...generateCircleStyle(i),
+            }}
+          />
+        ))}
+      </div>
+
       <div style={styles.card}>
         <h2 style={styles.title}>Login</h2>
         {error && <p style={styles.error}>{error}</p>}
@@ -45,9 +56,9 @@ const Login = () => {
             <input
               type="email"
               name="email"
-              required
               value={formData.email}
               onChange={handleChange}
+              required
               style={styles.input}
             />
           </div>
@@ -56,21 +67,62 @@ const Login = () => {
             <input
               type="password"
               name="password"
-              required
               value={formData.password}
               onChange={handleChange}
+              required
               style={styles.input}
             />
           </div>
-          <button type="submit" style={styles.button}>Login</button>
+          <button type="submit" style={styles.button} disabled={loading}>
+            {loading ? 'Logging in...' : 'Login'}
+          </button>
         </form>
         <p style={styles.footerText}>
           Don't have an account?{' '}
-          <Link to="/register" style={styles.link}>Register</Link>
+          <Link to="/register" style={styles.link}>
+            Register
+          </Link>
         </p>
       </div>
+
+      <style>
+        {`
+          @keyframes float {
+            0% { transform: translate(0, 0) scale(1); opacity: 0.8; }
+            50% { transform: translate(30px, 50px) scale(1.3); opacity: 0.5; }
+            100% { transform: translate(0, 0) scale(1); opacity: 0.8; }
+          }
+
+          @keyframes float2 {
+            0% { transform: translate(0, 0) scale(1); opacity: 0.9; }
+            50% { transform: translate(-50px, 100px) scale(1.5); opacity: 0.6; }
+            100% { transform: translate(0, 0) scale(1); opacity: 0.9; }
+          }
+        `}
+      </style>
     </div>
   );
+};
+
+const generateCircleStyle = (index) => {
+  const size = 30 + (index % 5) * 20;
+  const top = Math.random() * 100;
+  const left = Math.random() * 100;
+  const animationDuration = 10 + Math.random() * 10 + 's';
+  const animationName = index % 2 === 0 ? 'float' : 'float2';
+
+  return {
+    width: `${size}px`,
+    height: `${size}px`,
+    top: `${top}%`,
+    left: `${left}%`,
+    backgroundColor: `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(
+      Math.random() * 255
+    )}, ${Math.floor(Math.random() * 255)}, 0.5)`,
+    borderRadius: '50%',
+    position: 'absolute',
+    animation: `${animationName} ${animationDuration} infinite`,
+  };
 };
 
 const styles = {
@@ -79,62 +131,90 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#f4f6f8',
-    padding: '20px'
+    backgroundColor: '#ff7f50',
+    padding: '20px',
+    fontFamily: 'Arial, sans-serif',
+    position: 'relative',
+  },
+  animatedBackground: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    zIndex: 0,
+  },
+  circle: {
+    position: 'absolute',
+    borderRadius: '50%',
+    animation: 'float 10s ease-in-out infinite',
   },
   card: {
-    backgroundColor: '#fff',
-    padding: '30px',
-    borderRadius: '8px',
-    boxShadow: '0px 4px 12px rgba(0,0,0,0.1)',
+    backgroundColor: '#ffffff',
+    padding: '40px',
+    borderRadius: '12px',
+    boxShadow: '0px 10px 20px rgba(0, 0, 0, 0.1)',
     width: '100%',
-    maxWidth: '400px'
+    maxWidth: '450px',
+    textAlign: 'center',
+    zIndex: 10,
+    boxSizing: 'border-box',
   },
   title: {
-    marginBottom: '20px',
-    textAlign: 'center',
-    color: '#333'
+    marginBottom: '25px',
+    color: '#4CAF50',
+    fontSize: '28px',
+    fontWeight: 'bold',
+    letterSpacing: '1px',
+    textTransform: 'uppercase',
   },
   inputGroup: {
-    marginBottom: '15px'
+    marginBottom: '18px',
   },
   label: {
     display: 'block',
-    marginBottom: '5px',
+    marginBottom: '8px',
     fontWeight: 'bold',
-    color: '#555'
+    color: '#333',
+    fontSize: '16px',
   },
   input: {
     width: '100%',
-    padding: '10px',
-    border: '1px solid #ccc',
-    borderRadius: '4px'
+    padding: '14px',
+    border: '2px solid #4CAF50',
+    borderRadius: '8px',
+    fontSize: '16px',
+    color: '#555',
+    backgroundColor: '#f9f9f9',
+    outline: 'none',
+    boxSizing: 'border-box',
+    height: '50px',
   },
   button: {
     width: '100%',
-    padding: '12px',
+    padding: '15px',
     backgroundColor: '#4CAF50',
     color: '#fff',
     fontWeight: 'bold',
     border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer'
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontSize: '18px',
+    height: '55px',
   },
   error: {
     color: 'red',
-    textAlign: 'center',
-    marginBottom: '15px'
+    marginBottom: '20px',
+    fontSize: '14px',
   },
   footerText: {
-    textAlign: 'center',
-    marginTop: '15px',
-    color: '#666'
+    marginTop: '20px',
+    color: '#444',
+    fontSize: '14px',
   },
   link: {
     color: '#4CAF50',
     fontWeight: 'bold',
-    textDecoration: 'none'
-  }
+    textDecoration: 'none',
+  },
 };
 
 export default Login;

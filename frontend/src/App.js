@@ -7,7 +7,7 @@ import Login from './components/Login';
 import Register from './components/Register';
 import Landing from './components/Landing';
 import PrivateRoute from './components/PrivateRoute';
-import CustomerTransaction from './CustomerTransaction';
+import CustomerTransaction from './AddTransaction';
 
 function App() {
   return (

@@ -42,7 +42,7 @@ mongoose
   .then(() => {
     console.log('✅ MongoDB connected');
     app.listen(4000, () =>
-      console.log('🚀 Server running on http://localhost:4000')
+      console.log('🚀 Server running on http://localhost:5000')
     );
   })
   .catch((err) => {

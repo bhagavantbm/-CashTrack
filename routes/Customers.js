@@ -24,10 +24,10 @@ router.post('/', authMiddleware, async (req, res) => {
   }
 });
 
-// Get only customers created by the logged-in user
-// GET /api/customers
+// Get only customers created by the logged-in user (secured route)
 router.get('/', authMiddleware, async (req, res) => {
   try {
+    // Fetch customers for the logged-in user
     const customers = await Customer.find({ userId: req.user.id }).populate('transactions');
     res.json(customers);
   } catch (err) {
@@ -36,25 +36,33 @@ router.get('/', authMiddleware, async (req, res) => {
   }
 });
 
-router.get('/:id', async (req, res) => {
+// Get specific customer by ID (secured route)
+router.get('/:id', authMiddleware, async (req, res) => {
   try {
-    const customer = await Customer.findById(req.params.id).populate('transactions');
-    if (!customer) return res.status(404).json({ message: 'Customer not found' });
+    // Fetch the specific customer only if it belongs to the logged-in user
+    const customer = await Customer.findOne({ _id: req.params.id, userId: req.user.id }).populate('transactions');
+    
+    if (!customer) {
+      return res.status(404).json({ message: 'Customer not found or unauthorized' });
+    }
+
     res.json(customer);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
 
+// Delete customer by ID (secured route)
 router.delete('/:id', authMiddleware, async (req, res) => {
   try {
+    // Find and delete the customer only if it belongs to the logged-in user
     const customer = await Customer.findOneAndDelete({ _id: req.params.id, userId: req.user.id });
 
     if (!customer) {
       return res.status(404).json({ message: 'Customer not found or unauthorized' });
     }
 
-    // Optional: delete all transactions related to this customer
+    // Delete all transactions related to this customer
     await Transaction.deleteMany({ customerId: req.params.id });
 
     res.json({ message: 'Customer and related transactions deleted successfully' });
