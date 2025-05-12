@@ -1,4 +1,4 @@
-// ==== server/index.js ==== 
+// ==== server/index.js ====
 
 require('dotenv').config();
 const express = require('express');
@@ -23,9 +23,9 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Root route to handle base URL
+// Root route
 app.get('/', (req, res) => {
-  res.send('Welcome to CashTrack API!'); // Or serve your frontend page here
+  res.send('Welcome to CashTrack API!');
 });
 
 // Routes
@@ -41,8 +41,9 @@ mongoose
   })
   .then(() => {
     console.log('✅ MongoDB connected');
-    app.listen(4000, () =>
-      console.log('🚀 Server running on http://localhost:5000')
+    const PORT = process.env.PORT || 4000;
+    app.listen(PORT, () =>
+      console.log(`🚀 Server running on http://localhost:${PORT}`)
     );
   })
   .catch((err) => {

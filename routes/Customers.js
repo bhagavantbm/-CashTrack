@@ -6,21 +6,24 @@ const authMiddleware = require('../middleware/authMiddleware');
 
 // Add customer (secured route)
 router.post('/', authMiddleware, async (req, res) => {
-  const { name, phone, email } = req.body;
-  const userId = req.user.id; // Get user ID from decoded token
-
-  const newCustomer = new Customer({
-    name,
-    phone,
-    email,
-    userId,
-  });
-
   try {
-    const savedCustomer = await newCustomer.save();
-    res.status(201).json(savedCustomer);
-  } catch (err) {
-    res.status(400).json({ message: err.message });
+    const { name, phone } = req.body;
+
+    if (!name || !phone) {
+      return res.status(400).json({ message: 'Name and phone are required' });
+    }
+
+    const customer = new Customer({
+      name,
+      phone,
+      userId: req.user.id // From token
+    });
+
+    await customer.save();
+    res.status(201).json(customer);
+  } catch (error) {
+    console.error('Error adding customer:', error.message);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
