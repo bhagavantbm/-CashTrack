@@ -13,70 +13,71 @@ const User = require(userModelPath);
 const authenticate = require('../middleware/authMiddleware');
 const router = express.Router();
 
-
-// REGISTER Route
+console.log('Saved User:', User);
 router.post('/register', async (req, res) => {
-  const { name, email, password } = req.body;
+  const { email, password, username } = req.body;
 
-  if (!name || !email || !password)
-    return res.status(400).json({ message: 'Name, email, and password are required' });
+  console.log('Request body:', req.body); // Log the request body to check if username is included
+
+  if (!email || !password || !username) {
+    return res.status(400).json({ message: 'Email, password, and username required' });
+  }
 
   try {
-    const existingUser = await User.findOne({ email });
-    if (existingUser)
-      return res.status(409).json({ message: 'Email already registered' });
+    const existing = await User.findOne({ email });
+    if (existing) return res.status(409).json({ message: 'Email already registered' });
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashed = await bcrypt.hash(password, 10);
 
-    const newUser = new User({ name, email, password: hashedPassword });
-    await newUser.save();
+    const user = new User({ username,email, password: hashed});
+    await user.save();
 
-    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
-      expiresIn: '365d',
-    });
-
-    res.status(201).json({ token, userEmail: newUser.email });
+    res.status(201).json({ message: 'User registered successfully' });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error during registration' });
+    console.error('Error:', err);
+    res.status(500).json({ message: 'Error registering user' });
   }
 });
+
 
 // LOGIN Route
 router.post('/login', async (req, res) => {
-  const { email, password } = req.body;
-
+  const { email, password,username} = req.body;
   try {
-    // Find the user by email
     const user = await User.findOne({ email });
+    if (!user) return res.status(400).json({ message: 'Invalid credentials' });
 
-    if (!user) {
-      return res.status(400).json({ message: 'Invalid email or password' });
-    }
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
-    // Check if the password is correct using bcrypt.compare
-    const isPasswordValid = await bcrypt.compare(password, user.password); // Corrected comparison
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
-    if (!isPasswordValid) {
-      return res.status(400).json({ message: 'Invalid email or password' });
-    }
+    console.log('Login Response:', {
+      message: 'Login successful',
+      token,
+      user: {
+        username: user.username,
+        id: user._id,
+        email: user.email,
+         // Should be included here
+      }
+    });
 
-    // Create a JWT token
-    const token = jwt.sign(
-      { id: user._id, email: user.email },
-      process.env.JWT_SECRET, // Use your actual JWT secret
-      { expiresIn: '1h' }
-    );
-
-    // Send the response with the token and email
-    return res.json({ token, userEmail: user.email });
+    res.status(200).json({
+      message: 'Login successful',
+      token,
+      user: {
+        username: user.username,
+        id: user._id,
+        email: user.email,
+         // Ensure this is being returned
+      }
+    });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Error logging in: ' + error.message });
   }
 });
 
-// Update user's profile picture (Optional if you have such functionality)
 
 
 module.exports = router;

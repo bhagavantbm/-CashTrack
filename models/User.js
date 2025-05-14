@@ -2,6 +2,10 @@ const bcrypt = require('bcryptjs');
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
+    username: {
+    type: String,
+    required: true, // Make this field required or optional based on your needs
+  },
   email: {
     type: String,
     required: true,
@@ -13,12 +17,24 @@ const userSchema = new mongoose.Schema({
   },
 });
 
-// ✅ Add method BEFORE creating the model
+// Add method to compare passwords
 userSchema.methods.comparePassword = async function (candidatePassword) {
-  return await bcrypt.compare(candidatePassword, this.password);
+  try {
+    return await bcrypt.compare(candidatePassword, this.password);
+  } catch (err) {
+    throw new Error('Error comparing password');
+  }
 };
 
-// ✅ Model created AFTER adding method
+// Pre-save middleware to hash password if modified
+userSchema.pre('save', async function (next) {
+  if (this.isModified('password')) {
+    this.password = await bcrypt.hash(this.password, 10);
+  }
+  next();
+});
+
+// Create User model
 const User = mongoose.model('User', userSchema);
 
 module.exports = User;

@@ -19,7 +19,6 @@ const AddCustomer = () => {
       return;
     }
 
-    // Simple phone number validation (can be expanded)
     const phoneRegex = /^[0-9]{10}$/;
     if (!phoneRegex.test(phone)) {
       setError('Please enter a valid 10-digit phone number.');
@@ -27,7 +26,7 @@ const AddCustomer = () => {
     }
 
     setLoading(true);
-    setError(null); // Reset error state on submit
+    setError(null);
 
     try {
       const response = await axios.post(
@@ -57,22 +56,23 @@ const AddCustomer = () => {
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
-      background: 'linear-gradient(to right, #FF7E5F, #FEB47B)', // Stylish gradient background
-      fontFamily: 'Poppins, sans-serif', // Attractive font
+      background: 'linear-gradient(to right, #FF7E5F, #FEB47B)',
+      fontFamily: 'Poppins, sans-serif',
       padding: '20px',
     },
     form: {
       backgroundColor: '#fff',
-      padding: '40px 30px',
+      padding: '30px 20px',
       borderRadius: '12px',
-      boxShadow: '0 12px 24px rgba(0, 0, 0, 0.15)', // Soft shadow for depth
+      boxShadow: '0 12px 24px rgba(0, 0, 0, 0.15)',
       width: '100%',
-      maxWidth: '450px',
+      maxWidth: '450px', // Ensuring it doesn't stretch too wide on large screens
+      margin: '0 auto',
       transition: 'all 0.3s ease',
     },
     title: {
       marginBottom: '20px',
-      fontSize: '28px',
+      fontSize: '24px',
       fontWeight: '600',
       textAlign: 'center',
       color: '#333',
@@ -80,15 +80,16 @@ const AddCustomer = () => {
     },
     input: {
       width: '100%',
-      padding: '15px',
-      marginBottom: '20px',
+      padding: '12px',
+      marginBottom: '15px',
       borderRadius: '8px',
       border: '1px solid #ddd',
       fontSize: '16px',
-      transition: '0.3s ease', // Smooth focus transitions
+      boxSizing: 'border-box', // Ensure padding doesn't overflow the box
+      transition: '0.3s ease',
     },
     inputFocus: {
-      borderColor: '#FF7E5F', // Focus color on input
+      borderColor: '#FF7E5F',
       boxShadow: '0 0 10px rgba(255, 126, 95, 0.6)',
     },
     button: {

@@ -3,11 +3,11 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const router = express.Router();
 
-
+const User = require(userModelPath);
 
 
 router.post('/register', async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password,username} = req.body;
   
   console.log('Registration attempt:', email); // Log registration attempt
   
@@ -21,7 +21,7 @@ router.post('/register', async (req, res) => {
     const hashed = await bcrypt.hash(password, 10);
     console.log('Password hashed');
     
-    const user = new User({ email, password: hashed });
+    const user = new User({ email, password: hashed,username });
     await user.save();
     console.log('User saved');
     
@@ -34,7 +34,7 @@ router.post('/register', async (req, res) => {
 
 
 router.post('/login', async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password,username } = req.body;
   try {
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ message: 'Invalid credentials' });
@@ -50,7 +50,7 @@ router.post('/login', async (req, res) => {
       user: {
         id: user._id,
         email: user.email,
-        name: user.name,
+        name: user.username,
       }
     });
   } catch (error) {

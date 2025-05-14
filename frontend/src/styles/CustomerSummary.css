@@ -1,0 +1,137 @@
+.customer-container {
+  padding: 30px;
+  max-width: 800px;
+  margin: auto;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.customer-card {
+  background-color: #1e1e1e;
+    color: #f1f1f1;   
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+.customer-card h2 {
+  margin: 0;
+  color: #0d47a1;
+}
+
+.customer-card p {
+  margin: 8px 0;
+  font-size: 16px;
+}
+
+.credit {
+  color: green;
+  font-weight: bold;
+}
+
+.debt {
+  color: red;
+  font-weight: bold;
+}
+
+.section {
+  margin-top: 25px;
+  padding: 20px;
+  background: #fafafa;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.section h3 {
+  color: #1565c0;
+  margin-bottom: 15px;
+}
+
+.section input,
+.section select {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  margin: 8px 0;
+  border: 1px solid #cfd8dc;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.section button {
+  padding: 10px 15px;
+  background-color: #1976d2;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: 0.3s ease;
+}
+
+.section button:hover {
+  background-color: #0d47a1;
+}
+
+.txn-card {
+  background-color: #f1f8e9;
+  border-left: 6px solid #8bc34a;
+  margin-bottom: 15px;
+  padding: 15px;
+  border-radius: 10px;
+  transition: 0.3s ease;
+}
+
+.txn-card strong {
+  font-size: 16px;
+}
+
+.txn-card:hover {
+  background-color: #e8f5e9;
+}
+
+.sms-btn {
+  background-color: #ff9800;
+  margin-top: 10px;
+  color: white;
+  border-radius: 6px;
+  padding: 8px 12px;
+}
+
+.sms-btn:hover {
+  background-color: #f57c00;
+}
+
+.pay-btn,
+.paid-btn {
+  background-color: #4caf50;
+  margin-right: 8px;
+  color: white;
+  border-radius: 6px;
+  padding: 8px 12px;
+}
+
+.paid-btn {
+  background-color: #388e3c;
+}
+
+.pay-btn:hover {
+  background-color: #2e7d32;
+}
+
+.paid-btn:hover {
+  background-color: #1b5e20;
+}
+
+.settle-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.settle-actions input {
+  width: 120px;
+}

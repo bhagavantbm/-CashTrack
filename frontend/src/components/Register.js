@@ -24,6 +24,7 @@ const Register = () => {
 
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('email', res.data.userEmail);
+      localStorage.setItem('username', res.data.username); // Save the name
       navigate('/dashboard');
     } catch (err) {
       setLoading(false); // Hide loading state

@@ -1,5 +1,4 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
 
 const authenticate = async (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -12,7 +11,10 @@ const authenticate = async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // decoded should contain user ID
+
+    // ✅ Set user ID for later use in routes
+    req.user = { id: decoded.userId }; // Explicitly assign `id` for clarity
+
     next();
   } catch (error) {
     console.error('JWT verification failed:', error.message);

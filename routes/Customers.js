@@ -1,8 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const Customer = require('../models/customer');
-const Transaction = require('../models/Transaction'); // Required to delete related transactions
+const Transaction = require('../models/Transaction');
 const authMiddleware = require('../middleware/authMiddleware');
+
+// WebSocket io
+const io = require('socket.io-client'); // Import socket.io client here if needed in certain routes
 
 // Add customer (secured route)
 router.post('/', authMiddleware, async (req, res) => {
@@ -20,6 +23,10 @@ router.post('/', authMiddleware, async (req, res) => {
     });
 
     await customer.save();
+
+    // Emit event to all connected clients when a new customer is added
+    io.emit('new-customer', customer);
+
     res.status(201).json(customer);
   } catch (error) {
     console.error('Error adding customer:', error.message);
@@ -67,6 +74,9 @@ router.delete('/:id', authMiddleware, async (req, res) => {
 
     // Delete all transactions related to this customer
     await Transaction.deleteMany({ customerId: req.params.id });
+
+    // Emit event when a customer is deleted
+    io.emit('customer-deleted', customer);
 
     res.json({ message: 'Customer and related transactions deleted successfully' });
   } catch (err) {

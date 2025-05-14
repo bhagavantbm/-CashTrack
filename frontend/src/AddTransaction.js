@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 
 const CustomerTransaction = () => {
-  const { id } = useParams(); // Get the customer ID from URL
+  const { id } = useParams();
   const navigate = useNavigate();
 
   const [amount, setAmount] = useState('');
@@ -16,7 +16,6 @@ const CustomerTransaction = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Frontend validation
     if (!amount || parseFloat(amount) <= 0) {
       setError('Please enter a valid positive amount.');
       return;
@@ -47,10 +46,9 @@ const CustomerTransaction = () => {
       setDescription('');
       setType('credit');
 
-      // Hide success message after 2 seconds
       setTimeout(() => {
         setSuccessMessage('');
-        navigate(`/customer/${id}`); // Navigate to customer-specific transaction page
+        navigate(`/customer/${id}`);
       }, 2000);
     } catch (err) {
       console.error('Error adding transaction:', err.response?.data || err.message);
@@ -79,7 +77,6 @@ const CustomerTransaction = () => {
             min="0.01"
           />
         </label>
-        <br />
         <label style={styles.label}>
           Description:
           <input
@@ -89,7 +86,6 @@ const CustomerTransaction = () => {
             style={styles.input}
           />
         </label>
-        <br />
         <label style={styles.label}>
           Transaction Type:
           <select
@@ -98,11 +94,10 @@ const CustomerTransaction = () => {
             required
             style={styles.input}
           >
-            <option value="credit">Credit</option>
-            <option value="debit">Debit</option>
+            <option value="credit">Money Given</option>
+            <option value="debit">Money Taken</option>
           </select>
         </label>
-        <br />
         <button type="submit" disabled={loading} style={styles.button}>
           {loading ? 'Processing...' : 'Add Transaction'}
         </button>
@@ -111,7 +106,6 @@ const CustomerTransaction = () => {
   );
 };
 
-// Basic styles for better UX
 const styles = {
   container: {
     padding: '20px',

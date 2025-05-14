@@ -39,7 +39,7 @@ const Dashboard = () => {
       if (txn.type === 'credit') credit += txn.amount;
       else if (txn.type === 'debit') debit += txn.amount;
     });
-    return { credit, debit, balance: credit - debit };
+    return { credit, debit, balance: debit-credit };
   };
 
   const handleLogout = () => {
@@ -60,11 +60,46 @@ const Dashboard = () => {
     }
   };
 
-  const handleShare = (customer, credit, debit, balance) => {
-    const message = `Customer Summary:\nName: ${customer.name}\nPhone: ${customer.phone}\nCredit: ₹${credit}\nDebit: ₹${debit}\nBalance: ₹${balance}`;
-    const whatsappURL = `https://wa.me/?text=${encodeURIComponent(message)}`;
-    window.open(whatsappURL, '_blank');
-  };
+const handleShare = (customer, credit, debit, balance) => {
+  const lastTransaction = customer.transactions[customer.transactions.length - 1];
+  if (!lastTransaction) {
+    alert("No transactions found for this customer.");
+    return;
+  }
+
+  const lastTransactionDate = new Date(lastTransaction.createdAt || lastTransaction.date);
+  const today = new Date();
+
+  const formattedDate = lastTransactionDate.toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+
+  const diffTime = Math.abs(today - lastTransactionDate);
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  const dayText = diffDays === 1 ? '1 day ago' : `${diffDays} days ago`;
+
+  const senderEmail = localStorage.getItem('email') || 'CashTrack User';
+  const senderUsername = senderEmail.split('@')[0]; // Extract the part before '@'
+  console.log(senderUsername); // Check that this logs correctly
+
+  let message = '';
+
+  if (balance > 0) {
+    message = `Hi ${customer.name}, 👋\n\nThis is ${senderUsername}. You need to pay ₹${Math.abs(balance)} for "${lastTransaction.description || 'No description'}" on ${formattedDate} (${dayText}).\n\nPlease make the payment as soon as possible.\n\nThank you! 🙏`;
+  } else if (balance < 0) {
+    message = `Hi ${customer.name}, 👋\n\nThis is ${senderUsername}. Sorry for the delay. I need to return ₹${Math.abs(balance)} for "${lastTransaction.description || 'No description'}" on ${formattedDate} (${dayText}).\n\nI will make the payment within 2 days.\n\nThanks for your patience! 🙏`;
+  } else {
+    message = `Hi ${customer.name}, 👋\n\nAll balances are clear. Thank you for using CashTrack! ✅`;
+  }
+
+  const whatsappURL = `https://wa.me/?text=${encodeURIComponent(message)}`;
+  window.open(whatsappURL, '_blank');
+};
+
+
+
 
   const grandTotals = customers.reduce(
     (acc, customer) => {
@@ -309,9 +344,16 @@ const Dashboard = () => {
               <h3>{customer.name}</h3>
               <p style={{ color: '#777' }}>📞 {customer.phone}</p>
               <div className="amounts">
-                <p className="credit">Credit: ₹{credit}</p>
-                <p className="debit">Debit: ₹{debit}</p>
-                <p className="balance">Balance: ₹{balance}</p>
+                <p className="credit">Received Money: ₹{credit}</p>
+                <p className="debit">Paid Money: ₹{debit}</p>
+                <p className="balance">
+                  {balance > 0
+                    ? `You will receive ₹${balance}`
+                    : balance < 0
+                    ? `You need to give ₹${Math.abs(balance)}`
+                    : 'All Settled'}
+                </p>
+
               </div>
               <div className="buttons">
                 <button

@@ -1,278 +1,258 @@
+// Import statements stay unchanged
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import './CustomerDetails.css';
+import PaymentIcon from '@mui/icons-material/Payment';
+import SmsIcon from '@mui/icons-material/Sms';
+import "./styles/CustomerSummary.css"
 
 const CustomerDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-
   const [customer, setCustomer] = useState(null);
   const [amount, setAmount] = useState('');
   const [type, setType] = useState('credit');
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  const checkAuthorization = () => {
-    const token = localStorage.getItem('token');
-    if (!token) navigate('/login');
-    return token;
-  };
+  const [paidAmount, setPaidAmount] = useState('');
+  const [transactionSettled, setTransactionSettled] = useState(false);
+  const [requestCounts, setRequestCounts] = useState({});
+  const token = localStorage.getItem('token');
 
   const fetchCustomer = async () => {
-    const token = checkAuthorization();
-    if (!token) return;
-
+    if (!token) return navigate('/login');
     try {
-      const response = await axios.get(`https://cashtrack-6.onrender.com/api/customers/${id}`, {
+      const res = await axios.get(`https://cashtrack-6.onrender.com/api/customers/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setCustomer(response.data);
-    } catch {
-      setError('Failed to fetch customer details.');
+      setCustomer(res.data);
+      setTransactionSettled(false); // reset on refetch
+    } catch (err) {
+      alert(`Failed to load customer: ${err.message}`);
     } finally {
       setLoading(false);
     }
   };
 
   const handleAddTransaction = async () => {
-    const token = checkAuthorization();
-    if (!token) return;
+    if (!token) return navigate('/login');
+    const parsedAmount = parseFloat(amount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      alert('Please enter a valid amount');
+      return;
+    }
 
     try {
       await axios.post(
         `https://cashtrack-6.onrender.com/api/transactions/${id}`,
-        { type, amount: Number(amount), description },
+        { type, amount: parsedAmount, description: description.trim() },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setAmount('');
       setDescription('');
       fetchCustomer();
     } catch {
-      setError('Failed to add transaction.');
+      alert('Error adding transaction');
     }
   };
 
-  const handleDelete = async (transactionId) => {
-    const token = checkAuthorization();
-    if (!token) return;
-
-    try {
-      await axios.delete(
-        `https://cashtrack-6.onrender.com/api/transactions/${id}/${transactionId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+  const handlePhonePePayment = (balance) => {
+    alert(`Redirecting to PhonePe to pay ₹${balance}...`);
+    setTimeout(() => {
+      setTransactionSettled(true);
       fetchCustomer();
-    } catch {
-      setError('Failed to delete transaction.');
+    }, 2000);
+  };
+
+  const handleSendRequestSMS = (balance, txnId) => {
+    const senderUsername = localStorage.getItem('username') || 'CashTrack User';
+    const lastTxn = customer.transactions[customer.transactions.length - 1];
+    const formattedDate = new Date(lastTxn.createdAt).toLocaleDateString('en-IN', {
+      day: 'numeric', month: 'short', year: 'numeric',
+    });
+
+    const message = `Hello ${customer.name}, 👋
+
+This is a reminder from ${senderUsername}.
+
+📊 Balance: ₹${Math.abs(balance)}
+📝 Last transaction: "${lastTxn.description || 'No description'}" on ${formattedDate}
+
+Please pay ₹${Math.abs(balance)} to ${senderUsername} at your earliest convenience. Thank you! 🙏`;
+
+    window.location.href = `sms:${customer.phone}?body=${encodeURIComponent(message)}`;
+
+    setRequestCounts((prev) => ({
+      ...prev,
+      [txnId]: (prev[txnId] || 0) + 1,
+    }));
+  };
+
+const handlePaidAmount = async () => {
+  const parsedPaidAmount = parseFloat(paidAmount);
+  
+  if (isNaN(parsedPaidAmount) || parsedPaidAmount <= 0) {
+    alert('Please enter a valid amount');
+    return;
+  }
+
+  const balance = calculateTotals().balance;
+
+  if (parsedPaidAmount > balance) {
+    alert('Paid amount cannot exceed the balance');
+    return;
+  }
+
+  try {
+    // Create a new transaction of type 'debit' (customer paid)
+    await axios.post(
+      `https://cashtrack-6.onrender.com/api/transactions/${id}`,
+      {
+        type: 'debit',
+        amount: parsedPaidAmount,
+        description: `Payment received: ₹${parsedPaidAmount}`,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (parsedPaidAmount === balance) {
+      alert('Transaction Settled!');
+      setTransactionSettled(true);
+    } else {
+      const remaining = balance - parsedPaidAmount;
+      alert(`Partial payment received. ₹${remaining} still due.`);
     }
+
+    setPaidAmount('');
+    fetchCustomer();
+  } catch (err) {
+    alert('Failed to mark payment.');
+  }
+};
+
+
+  const addRemainingTransaction = async (remainingBalance) => {
+    const txnDescription = `Partial Payment - ₹${remainingBalance} remaining`;
+    await axios.post(
+      `https://cashtrack-6.onrender.com/api/transactions/${id}`,
+      {
+        type: 'credit',
+        amount: remainingBalance,
+        description: txnDescription,
+      },
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
   };
 
   const calculateTotals = () => {
-    if (!customer || !Array.isArray(customer.transactions)) return { credit: 0, debit: 0, balance: 0 };
     let credit = 0, debit = 0;
-    customer.transactions.forEach((t) => {
-      if (t.type === 'credit') credit += t.amount;
-      else if (t.type === 'debit') debit += t.amount;
-    });
+    if (Array.isArray(customer?.transactions)) {
+      customer.transactions.forEach((t) => {
+        if (t.type === 'credit') credit += t.amount;
+        else debit += t.amount;
+      });
+    }
     return { credit, debit, balance: credit - debit };
-  };
-
-  const handleShare = () => {
-    const { credit, debit, balance } = calculateTotals();
-    const message = `Customer Summary for ${customer.name}:\nPhone: ${customer.phone}\nCredit: ₹${credit}\nDebit: ₹${debit}\nBalance: ₹${balance}`;
-    const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
-    window.open(url, '_blank');
   };
 
   useEffect(() => {
     fetchCustomer();
   }, [id]);
 
-  if (loading) return <div style={{ textAlign: 'center', marginTop: '50px' }}>Loading...</div>;
-  if (error) return <div style={{ color: 'red', textAlign: 'center' }}>{error}</div>;
+  if (loading) return <p className="loading">Loading...</p>;
+  if (!customer) return <p className="loading">Customer not found</p>;
 
   const { credit, debit, balance } = calculateTotals();
-
-  const styles = {
-    container: {
-      fontFamily: 'Segoe UI, sans-serif',
-      padding: '30px',
-      maxWidth: '1000px',
-      margin: 'auto',
-    },
-    header: {
-      background: 'linear-gradient(135deg, #ff7e5f, #feb47b)',
-      padding: '20px',
-      color: '#fff',
-      borderRadius: '12px',
-      textAlign: 'center',
-      marginBottom: '30px',
-      boxShadow: '0 8px 16px rgba(0, 0, 0, 0.2)',
-    },
-    form: {
-      background: '#fff',
-      borderRadius: '10px',
-      padding: '20px',
-      boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-      marginBottom: '30px',
-    },
-    input: {
-      padding: '12px',
-      marginBottom: '12px',
-      borderRadius: '6px',
-      border: '1px solid #ddd',
-      fontSize: '16px',
-      width: '100%',
-    },
-    button: {
-      padding: '12px',
-      background: '#ff6347',
-      color: 'white',
-      border: 'none',
-      borderRadius: '6px',
-      cursor: 'pointer',
-      fontSize: '16px',
-      transition: '0.3s',
-      width: '100%',
-    },
-    deleteButton: {
-      background: '#dc3545',
-      padding: '8px 14px',
-      borderRadius: '4px',
-      color: 'white',
-      border: 'none',
-      cursor: 'pointer',
-      fontSize: '14px',
-      transition: '0.3s',
-    },
-    table: {
-      width: '100%',
-      borderCollapse: 'collapse',
-      marginBottom: '30px',
-    },
-    thtd: {
-      border: '1px solid #ddd',
-      padding: '12px',
-      textAlign: 'left',
-      backgroundColor: '#f9f9f9',
-    },
-    summary: {
-      padding: '20px',
-      background: '#f8f9fa',
-      borderRadius: '10px',
-      boxShadow: '0 2px 6px rgba(0, 0, 0, 0.1)',
-    },
-  };
+  const lastTxn = customer.transactions[customer.transactions.length - 1];
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6 }}
-      style={styles.container}
-    >
-      <div style={styles.header}>
-        <h2>{customer.name}'s Transaction Dashboard</h2>
-        <p>📞 {customer.phone}</p>
+    <div className="customer-container">
+      <div className="customer-card">
+        <h2>{customer.name} 💼</h2>
+        <p>📱 {customer.phone}</p>
+        <p>
+          💰 Balance:{' '}
+          <span className={balance < 0 ? 'debt' : 'credit'}>₹{Math.abs(balance)}</span>
+        </p>
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.2, duration: 0.4 }}
-        style={styles.form}
-      >
-        <h3>Add New Transaction</h3>
-        <select value={type} onChange={(e) => setType(e.target.value)} style={styles.input}>
-          <option value="credit">Credit</option>
-          <option value="debit">Debit</option>
+      <div className="section">
+        <h3>➕ Add Transaction</h3>
+        <select value={type} onChange={(e) => setType(e.target.value)}>
+          <option value="credit">Payment Received</option>
+          <option value="debit">Payment Paid</option>
         </select>
         <input
           type="number"
-          placeholder="Amount"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          style={styles.input}
+          placeholder="Amount"
         />
         <input
           type="text"
-          placeholder="Description (optional)"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          style={styles.input}
+          placeholder="Description (optional)"
         />
-        <button onClick={handleAddTransaction} style={styles.button}>➕ Add Transaction</button>
-      </motion.div>
-
-      <h3 style={{ marginBottom: '10px' }}>Transaction History</h3>
-      <div style={{ overflowX: 'auto' }}>
-        <motion.table
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-          style={styles.table}
-        >
-          <thead>
-            <tr>
-              <th style={styles.thtd}>Type & Date</th>
-              <th style={styles.thtd}>Amount</th>
-              <th style={styles.thtd}>Description</th>
-              <th style={styles.thtd}>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {customer.transactions?.length > 0 ? (
-              customer.transactions.map((txn) => {
-                const date = new Date(txn.createdAt).toLocaleDateString('en-IN', {
-                  day: '2-digit',
-                  month: 'short',
-                  year: 'numeric',
-                });
-                return (
-                  <tr key={txn._id}>
-                    <td style={styles.thtd}>
-                      <strong>{txn.type}</strong> <br />
-                      <small style={{ color: '#555' }}>{date}</small>
-                    </td>
-                    <td style={styles.thtd}>₹{txn.amount}</td>
-                    <td style={styles.thtd}>{txn.description || 'N/A'}</td>
-                    <td style={styles.thtd}>
-                      <button
-                        onClick={() => handleDelete(txn._id)}
-                        style={styles.deleteButton}
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })
-            ) : (
-              <tr>
-                <td colSpan="4" style={styles.thtd}>No transactions found.</td>
-              </tr>
-            )}
-          </tbody>
-        </motion.table>
+        <button onClick={handleAddTransaction} disabled={!amount}>
+          Save Transaction
+        </button>
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5, duration: 0.5 }}
-        style={styles.summary}
-      >
-        <h3>💰 Summary</h3>
-        <p><strong>Total Credit:</strong> ₹{credit}</p>
-        <p><strong>Total Debit:</strong> ₹{debit}</p>
-        <p><strong>Balance:</strong> ₹{balance}</p>
-        <button onClick={handleShare} style={styles.button}>
-          📤 Share on WhatsApp
-        </button>
-      </motion.div>
-    </motion.div>
+      <div className="section">
+        <h3>📜 Transaction History</h3>
+        {customer.transactions.length === 0 ? (
+          <p>No transactions yet</p>
+        ) : (
+          [...customer.transactions].reverse().map((txn) => {
+            const isLast = txn._id === lastTxn._id;
+            return (
+              <div key={txn._id} className="txn-card">
+                <p>
+                  <strong>{txn.type === 'credit' ? 'Received' : 'Paid'}:</strong> ₹{txn.amount}
+                </p>
+                <p>📅 {new Date(txn.createdAt).toLocaleString()}</p>
+                <p>📝 {txn.description || 'No description'}</p>
+
+                {isLast && !transactionSettled && (
+                  <div style={{ marginTop: 10 }}>
+                    {balance > 0 && (
+                      <>
+                        <button onClick={() => handlePhonePePayment(balance)} className="pay-btn">
+                          <PaymentIcon style={{ fontSize: 18 }} /> Pay ₹{balance}
+                        </button>
+                        <input
+                          type="number"
+                          value={paidAmount}
+                          onChange={(e) => setPaidAmount(e.target.value)}
+                          placeholder="Enter paid amount"
+                        />
+                        <button onClick={handlePaidAmount} className="paid-btn">
+                          Mark as Paid
+                        </button>
+                      </>
+                    )}
+
+                    {balance < 0 && (
+                      <button onClick={() => handleSendRequestSMS(balance, txn._id)} className="sms-btn">
+                        <SmsIcon style={{ fontSize: 18 }} /> Request Payment
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
+      </div>
+    </div>
   );
 };
 

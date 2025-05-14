@@ -19,7 +19,9 @@
     "json2csv": "^6.0.0-alpha.2",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.14.2",
-    "path-to-regexp": "^6.2.1"
+    "path-to-regexp": "^6.2.1",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1"
   },
   "devDependencies": {
     "concurrently": "^9.1.2",
