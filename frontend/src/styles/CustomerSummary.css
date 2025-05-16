@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 .customer-container {
   padding: 30px;
   max-width: 800px;
@@ -134,4 +135,241 @@
 
 .settle-actions input {
   width: 120px;
+=======
+/* CustomerSummary.css - Enhanced with attractive colors */
+
+.container {
+  max-width: 720px;
+  margin: 30px auto;
+  padding: 0 15px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #222;
+  background: #f0f3f7;
+  border-radius: 16px;
+  box-shadow: 0 12px 30px rgba(100, 80, 150, 0.12);
+}
+
+.card {
+  background: linear-gradient(135deg, #7b2ff7, #f107a3); /* purple to pink gradient */
+  padding: 28px 32px;
+  border-radius: 14px;
+  box-shadow: 0 10px 25px rgba(123, 47, 247, 0.3);
+  margin-bottom: 32px;
+  color: white;
+  text-align: center;
+  user-select: none;
+}
+
+.title {
+  font-weight: 800;
+  font-size: 2.3rem;
+  margin-bottom: 8px;
+  text-shadow: 0 2px 8px rgba(241, 7, 163, 0.7);
+  letter-spacing: 0.02em;
+}
+
+.info {
+  font-size: 1.15rem;
+  opacity: 0.85;
+  margin-bottom: 14px;
+  letter-spacing: 0.04em;
+}
+
+.balance {
+  font-weight: 700;
+  font-size: 1.5rem;
+  letter-spacing: 0.02em;
+  user-select: all;
+}
+
+.balance .positive {
+  color: #cff2c7; /* pastel green */
+  text-shadow: 0 0 6px #42b72a;
+}
+
+.balance .negative {
+  color: #ff8b94; /* soft red/pink */
+  text-shadow: 0 0 6px #ff3b3f;
+}
+
+.section {
+  background: white;
+  padding: 22px 28px;
+  border-radius: 14px;
+  margin-bottom: 34px;
+  box-shadow: 0 8px 18px rgba(123, 47, 247, 0.1);
+  border: 1px solid #eae6f7;
+}
+
+.section-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #6a1b9a;
+  margin-bottom: 20px;
+  user-select: none;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: linear-gradient(90deg, #f107a3 0%, #7b2ff7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.transaction-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+}
+
+.transaction-form select,
+.transaction-form input[type="number"],
+.transaction-form input[type="text"] {
+  flex: 1 1 160px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 2px solid #d7cdfc;
+  font-size: 1.1rem;
+  color: #4a148c;
+  font-weight: 600;
+  background: #f7f5ff;
+  transition: border-color 0.35s ease, box-shadow 0.35s ease;
+}
+
+.transaction-form select:focus,
+.transaction-form input[type="number"]:focus,
+.transaction-form input[type="text"]:focus {
+  outline: none;
+  border-color: #f107a3;
+  box-shadow: 0 0 12px rgba(241, 7, 163, 0.5);
+  background: #fff;
+}
+
+.transaction-form button {
+  background: linear-gradient(135deg, #7b2ff7, #f107a3);
+  color: white;
+  border: none;
+  padding: 14px 26px;
+  border-radius: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  user-select: none;
+  flex-shrink: 0;
+  min-width: 160px;
+  font-size: 1.05rem;
+  transition: background-position 0.35s ease, box-shadow 0.35s ease;
+  background-size: 200% 200%;
+  background-position: 0% 50%;
+}
+
+.transaction-form button.btn-disabled {
+  background: #c8b6e2;
+  cursor: not-allowed;
+  color: #7a6ca8;
+  box-shadow: none;
+}
+
+.transaction-form button.btn-primary:hover:not(.btn-disabled) {
+  background-position: 100% 50%;
+  box-shadow: 0 0 16px rgba(241, 7, 163, 0.6);
+}
+
+.txn-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 16px 24px;
+  box-shadow: 0 8px 30px rgba(123, 47, 247, 0.07);
+  margin-bottom: 16px;
+  user-select: none;
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.txn-card:hover {
+  box-shadow: 0 14px 45px rgba(241, 7, 163, 0.2);
+  transform: translateY(-4px);
+}
+
+.txn-card p {
+  margin: 8px 0;
+  font-size: 1rem;
+  color: #3c1361;
+}
+
+.txn-card strong {
+  color: #7b2ff7;
+}
+
+.txn-actions {
+  margin-top: 14px;
+  display: flex;
+  gap: 20px;
+  justify-content: flex-end;
+}
+
+.pay-button,
+.sms-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 16px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  user-select: none;
+  transition: box-shadow 0.3s ease, background-color 0.25s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.pay-button {
+  background: #00c853; /* vibrant green */
+  color: white;
+  box-shadow: 0 6px 20px #00c853aa;
+}
+
+.pay-button:hover {
+  background: #00a140;
+  box-shadow: 0 8px 30px #00a140cc;
+}
+
+.sms-button {
+  background: #d50000; /* bright red */
+  color: white;
+  box-shadow: 0 6px 20px #d50000aa;
+}
+
+.sms-button:hover {
+  background: #9b0000;
+  box-shadow: 0 8px 30px #9b0000cc;
+}
+
+/* Responsive */
+
+@media (max-width: 480px) {
+  .transaction-form {
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .transaction-form select,
+  .transaction-form input[type="number"],
+  .transaction-form input[type="text"],
+  .transaction-form button {
+    flex: 1 1 100%;
+    min-width: auto;
+  }
+
+  .txn-actions {
+    flex-direction: column;
+    gap: 14px;
+  }
+}
+
+.center-text {
+  text-align: center;
+  font-size: 1.2rem;
+  margin-top: 60px;
+  color: #777;
+  font-weight: 600;
+>>>>>>> 125050b5 (Fix registration route and API URL)
 }

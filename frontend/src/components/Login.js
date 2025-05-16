@@ -17,21 +17,39 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
     setLoading(true);
+
     try {
-     const response = await axios.post(
-  'https://cashtrack-6.onrender.com/api/users/login', // Use live backend URL here
-  formData
-);
+      const response = await axios.post(
+        'https://cashtrack-6.onrender.com/api/users/login',
+        formData
+      );
 
+      const { token, user, userEmail, username } = response.data;
 
+<<<<<<< HEAD
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('email', response.data.userEmail);
       localStorage.setItem('username', response.data.username || response.data.userName); // Save the name
+=======
+      // Save token and email
+      localStorage.setItem('token', token);
+      localStorage.setItem('email', userEmail || user?.email || '');
+      
+      // Save username if present, else empty string
+      localStorage.setItem('username', username || user?.username || '');
+
+      setLoading(false);
+>>>>>>> 125050b5 (Fix registration route and API URL)
       navigate('/dashboard');
     } catch (error) {
       setLoading(false);
-      setError(error.response?.data?.message || 'Login failed');
+      setError(
+        error.response?.data?.message ||
+        error.message ||
+        'Login failed. Please try again.'
+      );
     }
   };
 
@@ -62,6 +80,8 @@ const Login = () => {
               onChange={handleChange}
               required
               style={styles.input}
+              disabled={loading}
+              autoComplete="username"
             />
           </div>
           <div style={styles.inputGroup}>
@@ -73,6 +93,8 @@ const Login = () => {
               onChange={handleChange}
               required
               style={styles.input}
+              disabled={loading}
+              autoComplete="current-password"
             />
           </div>
           <button type="submit" style={styles.button} disabled={loading}>

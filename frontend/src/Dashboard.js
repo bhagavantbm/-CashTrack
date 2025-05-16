@@ -6,13 +6,13 @@ const Dashboard = () => {
   const [customers, setCustomers] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [email, setEmail] = useState('');
-  const [profilePic, setProfilePic] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     const userEmail = localStorage.getItem('email');
     if (!token) navigate('/login');
+      
     else {
       setEmail(userEmail || 'user@example.com');
       fetchCustomers();
@@ -27,9 +27,14 @@ const Dashboard = () => {
   const fetchCustomers = async () => {
     try {
       const res = await axios.get('https://cashtrack-6.onrender.com/api/customers', getAuthHeader());
-      setCustomers(res.data);
-    } catch (err) {
-      console.error('Error fetching customers:', err.response?.data || err.message);
+      const sortedCustomers = res.data.sort((a, b) => {
+        if (!a.createdAt) return 1;
+        if (!b.createdAt) return -1;
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      });
+      setCustomers(sortedCustomers);
+    } catch {
+      // Optionally handle errors
     }
   };
 
@@ -42,6 +47,16 @@ const Dashboard = () => {
     return { credit, debit, balance: debit-credit };
   };
 
+  const getBalanceText = (credit, debit) => {
+    if (credit > debit) {
+      return { text: `You need to give ₹${(credit - debit).toLocaleString()}`, type: 'give' };
+    } else if (debit > credit) {
+      return { text: `You will receive ₹${(debit - credit).toLocaleString()}`, type: 'receive' };
+    } else {
+      return { text: 'All Settled', type: 'settled' };
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('email');
@@ -49,9 +64,10 @@ const Dashboard = () => {
   };
 
   const handleDeleteCustomer = async (id) => {
-    if (window.confirm("Are you sure you want to delete this customer?")) {
-      try {
-        await axios.delete(`https://cashtrack-6.onrender.com/api/customers/${id}`, getAuthHeader());
+    if (!window.confirm("Are you sure you want to delete this customer?")) return;
+    try {
+      const response = await axios.delete(`https://cashtrack-6.onrender.com/api/customers/${id}`, getAuthHeader());
+      if (response.status >= 200 && response.status < 300) {
         alert('Customer deleted!');
         fetchCustomers();
       } catch (err) {
@@ -60,46 +76,11 @@ const Dashboard = () => {
     }
   };
 
-const handleShare = (customer, credit, debit, balance) => {
-  const lastTransaction = customer.transactions[customer.transactions.length - 1];
-  if (!lastTransaction) {
-    alert("No transactions found for this customer.");
-    return;
-  }
-
-  const lastTransactionDate = new Date(lastTransaction.createdAt || lastTransaction.date);
-  const today = new Date();
-
-  const formattedDate = lastTransactionDate.toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-
-  const diffTime = Math.abs(today - lastTransactionDate);
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  const dayText = diffDays === 1 ? '1 day ago' : `${diffDays} days ago`;
-
-  const senderEmail = localStorage.getItem('email') || 'CashTrack User';
-  const senderUsername = senderEmail.split('@')[0]; // Extract the part before '@'
-  console.log(senderUsername); // Check that this logs correctly
-
-  let message = '';
-
-  if (balance > 0) {
-    message = `Hi ${customer.name}, 👋\n\nThis is ${senderUsername}. You need to pay ₹${Math.abs(balance)} for "${lastTransaction.description || 'No description'}" on ${formattedDate} (${dayText}).\n\nPlease make the payment as soon as possible.\n\nThank you! 🙏`;
-  } else if (balance < 0) {
-    message = `Hi ${customer.name}, 👋\n\nThis is ${senderUsername}. Sorry for the delay. I need to return ₹${Math.abs(balance)} for "${lastTransaction.description || 'No description'}" on ${formattedDate} (${dayText}).\n\nI will make the payment within 2 days.\n\nThanks for your patience! 🙏`;
-  } else {
-    message = `Hi ${customer.name}, 👋\n\nAll balances are clear. Thank you for using CashTrack! ✅`;
-  }
-
-  const whatsappURL = `https://wa.me/?text=${encodeURIComponent(message)}`;
-  window.open(whatsappURL, '_blank');
-};
-
-
-
+  const handleShare = (customer, credit, debit, balance) => {
+    const message = `Customer Summary:\nName: ${customer.name}\nPhone: ${customer.phone}\nCredit: ₹${credit}\nDebit: ₹${debit}\nBalance: ₹${balance}`;
+    const whatsappURL = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(whatsappURL, '_blank');
+  };
 
   const grandTotals = customers.reduce(
     (acc, customer) => {
@@ -115,11 +96,14 @@ const handleShare = (customer, credit, debit, balance) => {
   return (
     <div className="dashboard">
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap');
+
         .dashboard {
-          padding: 20px;
-          background: #f0f4f8;
-          font-family: 'Segoe UI', sans-serif;
+          padding: 24px 16px;
+          background: #f9fafc;
+          font-family: 'Montserrat', sans-serif;
           min-height: 100vh;
+          color: #222;
         }
 
         .dashboard-header {
@@ -127,7 +111,13 @@ const handleShare = (customer, credit, debit, balance) => {
           justify-content: space-between;
           align-items: center;
           flex-wrap: wrap;
-          margin-bottom: 20px;
+          margin-bottom: 28px;
+        }
+
+        h1 {
+          font-weight: 700;
+          font-size: 2rem;
+          color: #2c3e50;
         }
 
         .profile {
@@ -136,190 +126,211 @@ const handleShare = (customer, credit, debit, balance) => {
         }
 
         .profile-circle {
-          width: 40px;
-          height: 40px;
-          background: #007bff;
+          width: 44px;
+          height: 44px;
+          background: linear-gradient(135deg, #6a11cb, #2575fc);
           color: white;
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-weight: bold;
+          font-weight: 700;
+          font-size: 1.3rem;
+          user-select: none;
+          box-shadow: 0 4px 15px rgba(101, 58, 181, 0.6);
         }
 
         .dropdown {
           position: absolute;
-          top: 50px;
+          top: 54px;
           right: 0;
           background: white;
-          box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-          border-radius: 6px;
-          padding: 10px;
-          z-index: 5;
-          animation: fadeIn 0.3s ease-in-out;
+          box-shadow: 0 8px 30px rgba(101, 58, 181, 0.2);
+          border-radius: 10px;
+          padding: 14px 20px;
+          z-index: 10;
+          min-width: 180px;
+          text-align: center;
+          font-size: 0.9rem;
+          color: #333;
+        }
+
+        .dropdown p {
+          margin: 0 0 14px 0;
+          font-weight: 600;
+          word-break: break-word;
         }
 
         .dropdown button {
-          background: red;
+          background: #8e44ad;
           color: white;
           border: none;
-          padding: 6px 12px;
-          border-radius: 4px;
+          padding: 10px 18px;
+          border-radius: 8px;
           cursor: pointer;
+          font-weight: 700;
+          width: 100%;
+          font-size: 0.95rem;
           transition: background 0.3s ease;
         }
 
         .dropdown button:hover {
-          background: darkred;
+          background: #732d91;
         }
 
         .actions {
           display: flex;
-          gap: 10px;
-          margin-bottom: 20px;
+          gap: 14px;
+          margin-bottom: 32px;
+          flex-wrap: wrap;
         }
 
         .actions button {
-          background: #28a745;
+          background: linear-gradient(135deg, #2575fc, #6a11cb);
           color: white;
           border: none;
-          padding: 10px 14px;
-          border-radius: 6px;
-          font-weight: bold;
+          padding: 12px 20px;
+          border-radius: 12px;
+          font-weight: 700;
+          font-size: 1rem;
           cursor: pointer;
-          transition: background 0.3s ease, transform 0.2s ease;
+          box-shadow: 0 6px 20px rgba(101, 58, 181, 0.4);
         }
 
         .actions button:hover {
-          background: #218838;
-          transform: scale(1.03);
+          background: linear-gradient(135deg, #6a11cb, #2575fc);
         }
 
         .cards-container {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
           gap: 20px;
         }
 
         .card {
           background: white;
-          padding: 16px;
-          border-radius: 12px;
-          box-shadow: 0 4px 16px rgba(0,0,0,0.05);
-          transition: 0.3s;
+          padding: 20px 24px;
+          border-radius: 16px;
+          box-shadow: 0 6px 22px rgba(0,0,0,0.08);
+          color: #333;
+          transition: transform 0.2s ease;
           cursor: pointer;
-          animation: cardFadeIn 0.6s ease both;
         }
 
         .card:hover {
           transform: translateY(-4px);
-          box-shadow: 0 6px 20px rgba(0,0,0,0.08);
         }
 
         .card h3 {
-          margin: 0 0 8px;
-          color: #333;
+          margin: 0;
           font-size: 1.2rem;
-          font-weight: 600;
+          font-weight: 700;
+          color: #2c3e50;
         }
 
-        .card .amounts {
-          margin: 10px 0;
-        }
-
-        .card .amounts p {
+        .card p {
           margin: 4px 0;
+          color: #444;
+          font-size: 0.95rem;
         }
 
-        .credit { color: green; }
-        .debit { color: red; }
-        .balance { font-weight: bold; }
-
-        .card .buttons {
-          display: flex;
-          gap: 10px;
+        .amounts {
           margin-top: 10px;
         }
 
-        .card .buttons button {
-          flex: 1;
-          border: none;
-          padding: 8px;
-          border-radius: 6px;
-          cursor: pointer;
+        .received-money {
+          color: #1e8449;
           font-weight: 600;
-          transition: background 0.3s ease, transform 0.2s ease;
+        }
+
+        .paid-money {
+          color: #c0392b;
+          font-weight: 600;
+        }
+
+        .balance {
+          margin-top: 10px;
+          font-weight: 700;
+          font-size: 1rem;
+        }
+
+        .balance.give {
+          color: #d35400;
+        }
+
+        .balance.receive {
+          color: #2e86c1;
+        }
+
+        .balance.settled {
+          color: #7f8c8d;
+        }
+
+        .buttons {
+          display: flex;
+          justify-content: space-between;
+          gap: 10px;
+          margin-top: 16px;
+        }
+
+        .buttons button {
+          flex: 1;
+          padding: 8px 12px;
+          border: none;
+          font-weight: 600;
+          font-size: 0.9rem;
+          border-radius: 8px;
+          cursor: pointer;
         }
 
         .delete-btn {
-          background: #dc3545;
+          background: #ec7063;
           color: white;
-        }
-
-        .delete-btn:hover {
-          background: #c82333;
-          transform: scale(1.05);
         }
 
         .share-btn {
-          background: #007bff;
+          background: #5dade2;
           color: white;
-        }
-
-        .share-btn:hover {
-          background: #0056b3;
-          transform: scale(1.05);
         }
 
         .totals-bar {
           margin-top: 40px;
-          padding: 20px;
-          background: linear-gradient(135deg, #ffe259, #ffa751);
-          color: #333;
-          border-radius: 12px;
-          box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-          font-size: 1.1rem;
-          text-align: center;
-          line-height: 1.6;
-          font-weight: 600;
+          background: white;
+          padding: 16px;
+          border-radius: 14px;
+          box-shadow: 0 6px 22px rgba(0,0,0,0.08);
           display: flex;
-          justify-content: space-around;
-          flex-wrap: wrap;
+          flex-direction: column;
+          align-items: center;
           gap: 10px;
-          animation: fadeIn 0.8s ease;
+          font-size: 1rem;
+          font-weight: 700;
         }
 
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
+        .totals-bar span {
+          text-align: center;
         }
 
-        @keyframes cardFadeIn {
-          from { opacity: 0; transform: scale(0.95); }
-          to { opacity: 1; transform: scale(1); }
+        .totals-received {
+          color: #27ae60;
         }
 
-        @media (max-width: 600px) {
-          .dashboard-header h2 {
-            font-size: 1.2rem;
-          }
+        .totals-paid {
+          color: #e74c3c;
+        }
 
-          .totals-bar {
-            flex-direction: column;
-            align-items: center;
-            text-align: left;
-          }
+        .totals-balance {
+          color: #2980b9;
         }
       `}</style>
 
+      {/* Header */}
       <div className="dashboard-header">
-        <h2>📋 Customer Dashboard</h2>
+        <h1>CashTrack Dashboard</h1>
         <div className="profile" onClick={() => setShowDropdown(!showDropdown)}>
-          <div className="profile-circle">
-            {profilePic ? <img src={profilePic} alt="profile" /> : email[0]?.toUpperCase()}
-          </div>
+          <div className="profile-circle">{email.charAt(0).toUpperCase()}</div>
           {showDropdown && (
-            <div className="dropdown">
+            <div className="dropdown" onClick={(e) => e.stopPropagation()}>
               <p>{email}</p>
               <button onClick={handleLogout}>Logout</button>
             </div>
@@ -327,57 +338,41 @@ const handleShare = (customer, credit, debit, balance) => {
         </div>
       </div>
 
+      {/* Actions */}
       <div className="actions">
-        <button onClick={() => navigate('/add-customer')}>➕ Add Customer</button>
-        <button onClick={fetchCustomers}>🔄 Refresh</button>
+        <button onClick={() => navigate('/add-customer')}>Add Customer</button>
       </div>
 
+      {/* Customer Cards */}
       <div className="cards-container">
-        {customers.map(customer => {
-          const { credit, debit, balance } = calculateCustomerTotals(customer.transactions);
-          return (
-            <div
-              className="card"
-              key={customer._id}
-              onClick={() => navigate(`/customer/${customer._id}`)}
-            >
-              <h3>{customer.name}</h3>
-              <p style={{ color: '#777' }}>📞 {customer.phone}</p>
-              <div className="amounts">
-                <p className="credit">Received Money: ₹{credit}</p>
-                <p className="debit">Paid Money: ₹{debit}</p>
-                <p className="balance">
-                  {balance > 0
-                    ? `You will receive ₹${balance}`
-                    : balance < 0
-                    ? `You need to give ₹${Math.abs(balance)}`
-                    : 'All Settled'}
-                </p>
+        {customers.length === 0 && <p>No customers found.</p>}
+        {customers.map((customer) => {
+          const { credit, debit } = calculateCustomerTotals(customer.transactions);
+          const { text, type } = getBalanceText(credit, debit);
 
+          return (
+            <div key={customer._id} className="card" onClick={() => navigate(`/customer/${customer._id}`)}>
+              <h3>{customer.name}</h3>
+              <div className="amounts">
+                <p className="credit">Credit: ₹{credit}</p>
+                <p className="debit">Debit: ₹{debit}</p>
+                <p className="balance">Balance: ₹{balance}</p>
               </div>
-              <div className="buttons">
-                <button
-                  className="delete-btn"
-                  onClick={(e) => { e.stopPropagation(); handleDeleteCustomer(customer._id); }}
-                >
-                  Delete
-                </button>
-                <button
-                  className="share-btn"
-                  onClick={(e) => { e.stopPropagation(); handleShare(customer, credit, debit, balance); }}
-                >
-                  Share
-                </button>
+              <div className={`balance ${type}`}>{text}</div>
+              <div className="buttons" onClick={(e) => e.stopPropagation()}>
+                <button className="delete-btn" onClick={() => handleDeleteCustomer(customer._id)}>Delete</button>
+                <button className="share-btn" onClick={() => handleShare(customer)}>Share</button>
               </div>
             </div>
           );
         })}
       </div>
 
+      {/* Totals Bar */}
       <div className="totals-bar">
-        <span>🟢 Credit: ₹{grandTotals.credit}</span>
-        <span>🔴 Debit: ₹{grandTotals.debit}</span>
-        <span>⚖️ Balance: ₹{grandTotals.balance}</span>
+        <span className="totals-received">Total Received: ₹{grandTotals.credit.toLocaleString()}</span>
+        <span className="totals-paid">Total Paid: ₹{grandTotals.debit.toLocaleString()}</span>
+        <span className="totals-balance">Balance: ₹{grandTotals.balance.toLocaleString()}</span>
       </div>
     </div>
   );

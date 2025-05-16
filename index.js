@@ -1,24 +1,20 @@
-// ==== server/index.js ====
-
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const cloudinary = require('cloudinary').v2;
 
+const profileRoutes = require('./routes/profileRoutes');
 const userRoutes = require('./routes/userRoutes');
 const customerRoutes = require('./routes/Customers');
 const transactionRoutes = require('./routes/Transaction');
-const profileRoutes = require('./routes/profileRoutes'); 
-
+const authRoutes = require('./routes/auth');
 
 const app = express();
 
-
-app.use('/api/users', profileRoutes);
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:3000', 'https://cash-track-nhlp.vercel.app']
+  origin: ['http://localhost:3000', 'https://cash-track-nhlp.vercel.app'],
 }));
 app.use(express.json());
 
@@ -34,7 +30,11 @@ app.get('/', (req, res) => {
   res.send('Welcome to CashTrack API!');
 });
 
-// Routes
+// ✅ Mount auth route
+app.use('/api/auth', authRoutes);
+
+// Other routes
+app.use('/api/users', profileRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/transactions', transactionRoutes);
