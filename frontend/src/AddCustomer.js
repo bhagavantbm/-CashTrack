@@ -9,52 +9,70 @@ const AddCustomer = () => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    const token = localStorage.getItem('token');
-    if (!token) {
-      alert('Please log in first.');
-      navigate('/login');
-      return;
-    }
+  setError(null);
 
-    const trimmedName = name.trim();
-    const trimmedPhone = phone.trim();
+  const token = localStorage.getItem('token');
+  if (!token) {
+    alert('Please log in first.');
+    navigate('/login');
+    return;
+  }
 
-    const phoneRegex = /^[0-9]{10}$/;
-    if (!phoneRegex.test(trimmedPhone)) {
-      setError('Please enter a valid 10-digit phone number.');
-      return;
-    }
+  const trimmedName = name.trim();
+  const trimmedPhone = phone.trim();
 
-    setLoading(true);
-    setError(null);
+  const phoneRegex = /^[0-9]{10}$/;
+  if (!phoneRegex.test(trimmedPhone)) {
+    setError('Please enter a valid 10-digit phone number.');
+    return;
+  }
 
-    try {
-      await axios.post(
-        'https://cashtrack-6.onrender.com/api/customers',
-        { name: trimmedName, phone: trimmedPhone },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+  setLoading(true);
 
-      setName('');
-      setPhone('');
-      navigate('/dashboard');
-    } catch (error) {
-      if (error.response && error.response.status === 500) {
-        setName('');
-        setPhone('');
-        navigate('/dashboard');
-        return;
+  console.log('Submitting customer:', { trimmedName, trimmedPhone, token });
+
+  try {
+    const response = await axios.post(
+      // `${import.meta.env.VITE_API_URL}/api/customers`, // ✅ Vite syntax
+      // OR use the below if using Create React App:
+      `${process.env.REACT_APP_API_URL}/api/customers`,
+      {
+        name: trimmedName,
+        phone: trimmedPhone
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
       }
-      setError(error.response?.data?.message || error.message || 'Server error occurred. Please try again.');
-    } finally {
-      setLoading(false);
+    );
+
+    console.log('Customer added:', response.data);
+
+    setName('');
+    setPhone('');
+    navigate('/dashboard');
+  } catch (error) {
+    console.error('Add customer error:', error);
+
+    if (error.response?.status === 500) {
+      setError('Internal Server Error. Please try again later.');
+    } else {
+      setError(
+        error.response?.data?.message || error.message || 'Something went wrong. Please try again.'
+      );
     }
-  };
+  } finally {
+    setLoading(false);
+  }
+};
+
+
 
   const styles = {
     container: {

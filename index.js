@@ -3,6 +3,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const cloudinary = require('cloudinary').v2;
+const http = require('http');             // <-- import http module
+const { Server } = require('socket.io');  // <-- import socket.io Server
 
 const profileRoutes = require('./routes/profileRoutes');
 const userRoutes = require('./routes/userRoutes');
@@ -11,6 +13,17 @@ const transactionRoutes = require('./routes/Transaction');
 const authRoutes = require('./routes/auth');
 
 const app = express();
+
+// Create HTTP server from Express app
+const server = http.createServer(app);
+
+// Initialize Socket.IO server with CORS config matching frontend
+const io = new Server(server, {
+  cors: {
+    origin: ['http://localhost:3000', 'https://cash-track-nhlp.vercel.app'],
+    methods: ['GET', 'POST'],
+  },
+});
 
 // Middleware
 app.use(cors({
@@ -30,16 +43,20 @@ app.get('/', (req, res) => {
   res.send('Welcome to CashTrack API!');
 });
 
-// ✅ Mount auth route
-app.use('/api/auth', authRoutes);
+// Make io accessible in routes through request object
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
 
-// Other routes
+// Mount routes
+app.use('/api/auth', authRoutes);
 app.use('/api/users', profileRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/transactions', transactionRoutes);
 
-// MongoDB connection
+// MongoDB connection and server start
 mongoose
   .connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
@@ -48,10 +65,20 @@ mongoose
   .then(() => {
     console.log('✅ MongoDB connected');
     const PORT = process.env.PORT || 4000;
-    app.listen(PORT, () =>
-      console.log(`🚀 Server running on http://localhost:${PORT}`)
-    );
+    // Use the HTTP server to listen, not app.listen
+    server.listen(PORT, () => {
+      console.log(`🚀 Server running on http://localhost:${PORT}`);
+    });
   })
   .catch((err) => {
     console.error('❌ MongoDB connection error:', err);
   });
+
+// Optional: Handle socket connections
+io.on('connection', (socket) => {
+  console.log(`🔌 New client connected: ${socket.id}`);
+
+  socket.on('disconnect', () => {
+    console.log(`❌ Client disconnected: ${socket.id}`);
+  });
+});
