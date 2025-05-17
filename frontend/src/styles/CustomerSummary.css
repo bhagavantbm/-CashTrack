@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 .customer-container {
   padding: 30px;
   max-width: 800px;
@@ -135,7 +135,7 @@
 
 .settle-actions input {
   width: 120px;
-=======
+}
 /* CustomerSummary.css - Enhanced with attractive colors */
 
 .container {
@@ -371,5 +371,4 @@
   margin-top: 60px;
   color: #777;
   font-weight: 600;
->>>>>>> 125050b5 (Fix registration route and API URL)
 }

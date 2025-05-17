@@ -11,13 +11,14 @@ const Dashboard = () => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     const userEmail = localStorage.getItem('email');
-    if (!token) navigate('/login');
-      
-    else {
+    if (!token) {
+      navigate('/login');
+    } else {
       setEmail(userEmail || 'user@example.com');
       fetchCustomers();
     }
   }, []);
+
 
   const getAuthHeader = () => {
     const token = localStorage.getItem('token');
@@ -33,8 +34,9 @@ const Dashboard = () => {
         return new Date(b.createdAt) - new Date(a.createdAt);
       });
       setCustomers(sortedCustomers);
-    } catch {
-      // Optionally handle errors
+    } catch (error) {
+      console.error('Error fetching customers:', error);
+      // Optionally handle errors more gracefully here
     }
   };
 
@@ -44,7 +46,7 @@ const Dashboard = () => {
       if (txn.type === 'credit') credit += txn.amount;
       else if (txn.type === 'debit') debit += txn.amount;
     });
-    return { credit, debit, balance: debit-credit };
+    return { credit, debit, balance: debit - credit };
   };
 
   const getBalanceText = (credit, debit) => {
@@ -70,9 +72,9 @@ const Dashboard = () => {
       if (response.status >= 200 && response.status < 300) {
         alert('Customer deleted!');
         fetchCustomers();
-      } catch (err) {
-        console.error('Error deleting customer:', err.response?.data || err.message);
       }
+    } catch (err) {
+      console.error('Error deleting customer:', err.response?.data || err.message);
     }
   };
 
@@ -328,7 +330,7 @@ const Dashboard = () => {
       <div className="dashboard-header">
         <h1>CashTrack Dashboard</h1>
         <div className="profile" onClick={() => setShowDropdown(!showDropdown)}>
-          <div className="profile-circle">{email.charAt(0).toUpperCase()}</div>
+<div className="profile-circle">{email ? email.charAt(0).toUpperCase() : 'U'}</div>
           {showDropdown && (
             <div className="dropdown" onClick={(e) => e.stopPropagation()}>
               <p>{email}</p>
@@ -347,21 +349,21 @@ const Dashboard = () => {
       <div className="cards-container">
         {customers.length === 0 && <p>No customers found.</p>}
         {customers.map((customer) => {
-          const { credit, debit } = calculateCustomerTotals(customer.transactions);
+          const { credit, debit, balance } = calculateCustomerTotals(customer.transactions);
           const { text, type } = getBalanceText(credit, debit);
 
           return (
             <div key={customer._id} className="card" onClick={() => navigate(`/customer/${customer._id}`)}>
               <h3>{customer.name}</h3>
               <div className="amounts">
-                <p className="credit">Credit: ₹{credit}</p>
-                <p className="debit">Debit: ₹{debit}</p>
-                <p className="balance">Balance: ₹{balance}</p>
+                <p className="credit">Credit: ₹{credit.toLocaleString()}</p>
+                <p className="debit">Debit: ₹{debit.toLocaleString()}</p>
+                <p className="balance">Balance: ₹{balance.toLocaleString()}</p>
               </div>
               <div className={`balance ${type}`}>{text}</div>
               <div className="buttons" onClick={(e) => e.stopPropagation()}>
                 <button className="delete-btn" onClick={() => handleDeleteCustomer(customer._id)}>Delete</button>
-                <button className="share-btn" onClick={() => handleShare(customer)}>Share</button>
+                <button className="share-btn" onClick={() => handleShare(customer, credit, debit, balance)}>Share</button>
               </div>
             </div>
           );

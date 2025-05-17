@@ -22,7 +22,7 @@ const Register = () => {
 
     try {
       const res = await axios.post(
-        'https://cashtrack-6.onrender.com/api/users/register',
+  'http://localhost:4000/api/users/register',
         formData
       );
 
